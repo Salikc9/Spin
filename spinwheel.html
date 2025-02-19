@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spin the Wheel!</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        canvas { margin-top: 20px; }
+        #spinButton { 
+            padding: 10px 20px; font-size: 18px; margin-top: 20px; 
+            cursor: pointer; background-color: #28a745; color: white; 
+            border: none; border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🎡 Tap to Spin & Win!</h2>
+    <canvas id="wheelCanvas" width="300" height="300"></canvas>
+    <br>
+    <button id="spinButton">SPIN</button>
+
+    <script>
+        const canvas = document.getElementById("wheelCanvas");
+        const ctx = canvas.getContext("2d");
+        const rewards = ["10 TPTS", "25 TPTS", "50 TPTS", "Booster x2", "Free Pick", "Jackpot! 100 TPTS"];
+        let spinning = false;
+
+        function drawWheel() {
+            const slices = rewards.length;
+            const sliceAngle = (2 * Math.PI) / slices;
+            for (let i = 0; i < slices; i++) {
+                ctx.beginPath();
+                ctx.moveTo(150, 150);
+                ctx.arc(150, 150, 150, i * sliceAngle, (i + 1) * sliceAngle);
+                ctx.fillStyle = i % 2 === 0 ? "#f39c12" : "#e74c3c";
+                ctx.fill();
+                ctx.closePath();
+                ctx.fillStyle = "white";
+                ctx.font = "16px Arial";
+                ctx.fillText(rewards[i], 150 + Math.cos(i * sliceAngle + sliceAngle / 2) * 100, 150 + Math.sin(i * sliceAngle + sliceAngle / 2) * 100);
+            }
+        }
+
+        function spinWheel() {
+            if (spinning) return;
+            spinning = true;
+            let rotations = Math.floor(Math.random() * 10) + 5;
+            let angle = 0;
+            const interval = setInterval(() => {
+                angle += 20;
+                if (angle >= 360 * rotations) {
+                    clearInterval(interval);
+                    spinning = false;
+                    let prizeIndex = Math.floor(Math.random() * rewards.length);
+                    let prize = rewards[prizeIndex];
+
+                    // Send result to Telegram bot
+                    fetch(`https://yourserver.com/spin-result?prize=${encodeURIComponent(prize)}`);
+                    
+                    alert(`🎉 You won: ${prize}!`);
+                }
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.translate(150, 150);
+                ctx.rotate(angle * Math.PI / 180);
+                ctx.translate(-150, -150);
+                drawWheel();
+                ctx.restore();
+            }, 50);
+        }
+
+        document.getElementById("spinButton").addEventListener("click", spinWheel);
+        drawWheel();
+    </script>
+
+</body>
+</html>
+
